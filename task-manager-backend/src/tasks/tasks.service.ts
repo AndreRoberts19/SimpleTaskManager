@@ -19,10 +19,14 @@ export class TasksService {
 
     this.tasks.push(task);
 
+    console.log("Added task", title, description);
+
     return task;
   }
 
   findAll() {
+    console.log("Retrieving all tasks");
+    console.log(this.tasks);
     return this.tasks;
   }
 
@@ -45,11 +49,14 @@ export class TasksService {
 
     this.tasks[index] = updatedTask;
 
+    console.log("Updated task", title, description);
+
     return updatedTask;
 
   }
 
   remove(id: string) {
+    console.log("Removed task", id);
     this.tasks = this.tasks.filter(task => task.id !== id);
   }
 }
