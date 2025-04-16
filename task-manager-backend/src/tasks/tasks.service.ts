@@ -34,7 +34,7 @@ export class TasksService {
     return this.tasks.find((task) => task.id === id);
   }
 
-  update(id: string, title: string, description: string) {
+  update(id: string, title: string | null, description: string | null, completed: boolean | null) {
     const index = this.tasks.findIndex(task => task.id === id);
     if (index === -1) {
       throw new NotFoundException(`Task with id ${id} not found`);
@@ -42,14 +42,14 @@ export class TasksService {
 
     const updatedTask: Task = {
       id,
-      title,
-      description,
-      completed: false,
+      title: title ?? this.tasks[index].title,
+      description: description ?? this.tasks[index].description,
+      completed: completed ?? this.tasks[index].completed
     };
 
     this.tasks[index] = updatedTask;
 
-    console.log("Updated task", title, description);
+    console.log("Updated task", updatedTask.title, updatedTask.description);
 
     return updatedTask;
 
