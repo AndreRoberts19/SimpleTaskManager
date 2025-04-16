@@ -3,17 +3,21 @@ import axios from "axios";
 
 export default function TaskList({onRefresh, tasks}) {
     const [filter, setFilter] = useState("");
+    const [filterComplete, setFilterComplete] = useState(false);
 
     const [editTaskID, setEditTaskID] = useState(""); // Used to indicate which task is currently being edited.
     const [editTaskTitle, setEditTaskTitle] = useState("");
     const [editTaskDescription, setEditTaskDescription] = useState("");
 
     tasks = tasks.filter(task => {
-        return task.title.includes(filter) || task.description.includes(filter);
+        return (
+            (task.title.toLowerCase().includes(filter.toLowerCase()) || task.description.toLowerCase().includes(filter.toLowerCase()))
+            && (!filterComplete || !task.completed)
+        );
     })
 
-    function updateTask(id, title, description) {
-        axios.patch(`http://localhost:3000/tasks/${id}`, {title, description})
+    function updateTask(id, title, description, completed) {
+        axios.patch(`http://localhost:3000/tasks/${id}`, {title, description, completed})
             .then(() => {
                 onRefresh();
                 setEditTaskID("");
@@ -31,6 +35,15 @@ export default function TaskList({onRefresh, tasks}) {
         <div className="border border-gray-300 p-6 rounded shadow-md bg-white w-full max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold text-gray-800">Task List</h1>
+                <label className="flex items-center gap-1">
+                    <input
+                        type="checkbox"
+                        checked={filterComplete}
+                        onChange={() => setFilterComplete(!filterComplete)}
+                        className="w-4 h-4 accent-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Show Incomplete Tasks Only</span>
+                </label>
                 <input
                     type="text"
                     placeholder="Filter"
@@ -79,8 +92,8 @@ export default function TaskList({onRefresh, tasks}) {
                             :
 
                             <div className="flex flex-col gap-2">
-                                <h3 className="text-lg font-semibold text-gray-900">{task.title}</h3>
-                                <p className="text-gray-700">{task.description}</p>
+                                <h3 className={"text-lg font-semibold text-gray-900 " + (task.completed && "line-through")}>{task.title}</h3>
+                                <p className={"text-gray-700 " + (task.completed && "line-through")}>{task.description}</p>
                                 <div className="flex gap-2 mt-2">
                                     <button
                                         onClick={() => deleteTask(task.id)}
@@ -98,6 +111,15 @@ export default function TaskList({onRefresh, tasks}) {
                                     >
                                         Edit
                                     </button>
+                                    <label className="flex items-center gap-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={task.completed}
+                                            onChange={() => updateTask(task.id, null, null, !task.completed)}
+                                            className="w-4 h-4 accent-blue-500"
+                                        />
+                                        <span className="text-sm text-gray-700">{task.completed ? "Completed!" : "Incomplete"}</span>
+                                    </label>
                                 </div>
                             </div>
                         }

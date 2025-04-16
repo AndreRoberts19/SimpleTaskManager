@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { TasksService } from './tasks.service';
 // import { CreateTaskDto } from './dto/create-task.dto';
 // import { UpdateTaskDto } from './dto/update-task.dto';
-import { Task } from './entities/task.entity';
+// import { Task } from './entities/task.entity';
 
 @Controller('tasks')
 export class TasksController {
@@ -29,10 +29,11 @@ export class TasksController {
   @Patch(':id')
   update(
       @Param('id') id: string,
-      @Body('title') title: string,
-      @Body('description') description: string
+      @Body('title') title: string | null,
+      @Body('description') description: string | null,
+      @Body('completed') completed: boolean | null
   ) {
-    return this.tasksService.update(id, title, description);
+    return this.tasksService.update(id, title, description, completed);
   }
 
   @Delete(':id')
