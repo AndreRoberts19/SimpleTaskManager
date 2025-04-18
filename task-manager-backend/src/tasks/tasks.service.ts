@@ -1,62 +1,69 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
-// import { CreateTaskDto } from './dto/create-task.dto';
-// import { UpdateTaskDto } from './dto/update-task.dto';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
 import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class TasksService {
 
-  private tasks: Task[] = [];
+  constructor(
+      @InjectRepository(Task)
+      private tasksRepository: Repository<Task>,
+  ) {}
 
-  create(title: string, description: string) {
-    const task: Task = {
+  async create(title: string, description: string) {
+
+    const task = {
       id: uuid(),
       title,
       description,
       completed: false,
-    };
+    }
 
-    this.tasks.push(task);
+    await this.tasksRepository.insert(task);
 
     console.log("Added task", title, description);
 
     return task;
   }
 
-  findAll() {
+  async findAll() {
     console.log("Retrieving all tasks");
-    console.log(this.tasks);
-    return this.tasks;
+    const tasks = await this.tasksRepository.find();
+    console.log(tasks);
+    return tasks;
   }
 
   findOne(id: string) {
-    return this.tasks.find((task) => task.id === id);
+    return this.tasksRepository.findOneBy({ id });
   }
 
-  update(id: string, title: string | null, description: string | null, completed: boolean | null) {
-    const index = this.tasks.findIndex(task => task.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Task with id ${id} not found`);
+  async update(id: string, title: string | null, description: string | null, completed: boolean | null) {
+
+    const updateData: Partial<Task> = {};
+
+    if (title !== null) {
+      updateData.title = title;
+    }
+    if (description !== null) {
+      updateData.description = description;
+    }
+    if (completed !== null) {
+      updateData.completed = completed;
     }
 
-    const updatedTask: Task = {
-      id,
-      title: title ?? this.tasks[index].title,
-      description: description ?? this.tasks[index].description,
-      completed: completed ?? this.tasks[index].completed
-    };
+    await this.tasksRepository.update(id, updateData);
 
-    this.tasks[index] = updatedTask;
+    const task = await this.tasksRepository.findOne({ where: { id } });
+    console.log("Updated task: ", task);
 
-    console.log("Updated task", updatedTask.title, updatedTask.description);
-
-    return updatedTask;
+    return task;
 
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+    await this.tasksRepository.delete(id);
     console.log("Removed task", id);
-    this.tasks = this.tasks.filter(task => task.id !== id);
   }
 }
